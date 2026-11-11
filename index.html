@@ -97,7 +97,7 @@ function occ(e,k){if(k<e.date)return false;if(e.rep=='none')return k<=e.endDate;
 const LC={work:'#4f8cff',private:'#34c38f',family:'#f59e0b',important:'#ef4444',sport:'#a855f7',other:'#64748b'},col=e=>LC[e.label]||e.lc||'#64748b';
 const APPS=[['MyKalender','cal',CAL_URL],['MyTasks','check'],['MyNotes','note'],['MyProjects','folder'],['MyHabits','repeat'],['MyDay','sun'],['MyLinks','link'],['MyPDF','file'],['MyConvert','sync'],['MyQR','grid'],['MyImage','image'],['MyBudget','euro'],['MyMeals','food'],['MyTravel','map'],['MyInventory','box'],['MyCycle','cycle'],['MyActivity','pulse'],['MyChat','chat'],['MyVault','lock'],['MySupport','help'],['MyStatus','wifi']];
 const DEFAULT_DASH={apps:{},announcement:{enabled:false,text:''},maintenance:{enabled:false,message:''}};
-const S={user:null,prem:false,admin:false,adminOpen:false,dash:DEFAULT_DASH,set:{},events:[],periods:[],msg:'Lade dein Dashboard …',mode:'login',err:'',info:''};
+const S={user:null,prem:false,admin:false,adminOpen:false,roleUser:null,dash:DEFAULT_DASH,set:{},events:[],periods:[],msg:'Lade dein Dashboard …',mode:'login',err:'',info:''};
 const isD=()=>{const t=S.set.theme||'dark';return t=='auto'?matchMedia('(prefers-color-scheme: dark)').matches:t=='dark'};
 function apply(){const r=document.documentElement,a=S.set.accent;r.dataset.theme=isD()?'dark':'light';
  if(a&&/^#[0-9a-f]{6}$/i.test(a)){const n=parseInt(a.slice(1),16),l=((n>>16)*299+((n>>8&255)*587)+((n&255)*114))/1000;r.style.setProperty('--ac',a);r.style.setProperty('--acx',l>150?'#0a0a0c':'#fff')}else{r.style.removeProperty('--ac');r.style.removeProperty('--acx')}}
@@ -119,6 +119,16 @@ ${APPS.map(a=>{const c=appConfig(a[0]);return `<div class="adminrow"><b>${esc(a[
 <h3>Wartungshinweis</h3>
 <label class="adminflag"><input id="maint_on" type="checkbox" ${S.dash.maintenance?.enabled?'checked':''}> Wartungshinweis anzeigen</label>
 <textarea id="maint_text" rows="2" placeholder="Hinweis zur Wartung">${esc(S.dash.maintenance?.message||'')}</textarea>
+
+<h3>Benutzer & Rechte verwalten</h3>
+<p class="m sm">Suche nach dem exakten Benutzernamen. Du kannst Premium und Admin-Rechte getrennt vergeben.</p>
+<div class="adminhead"><input id="role_username" placeholder="Benutzername eingeben" autocomplete="off"><button class="b" data-a="roleFind">Suchen</button></div>
+<div id="role_result" class="notice" style="display:none"></div>
+<div id="role_controls" style="display:none;gap:10px;flex-direction:column">
+<label class="adminflag"><input id="role_premium" type="checkbox"> Premium aktivieren</label>
+<label class="adminflag"><input id="role_admin" type="checkbox"> Admin-Rechte vergeben</label>
+<div><button class="b p" data-a="roleSave">Rechte speichern</button></div>
+</div>
 <div class="adminhead"><span class="m sm">Änderungen werden für alle Dashboard-Nutzer gespeichert.</span><span class="sp"></span><button class="b p" data-a="adminSave">Einstellungen speichern</button></div></section>`}
 function render(){const app=$('#app');
  if(!S.user){app.innerHTML=authv();return}
@@ -147,7 +157,10 @@ ${m=='reset'?'':'<input id="pw" type="password" placeholder="Passwort (mind. 8 Z
 ${S.err?`<div class="er">${esc(S.err)}</div>`:''}${S.info?`<div class="sm m">${esc(S.info)}</div>`:''}
 <button class="b p" data-a="auth">${{login:'Anmelden',register:'Registrieren',reset:'Link senden',newpw:'Passwort speichern'}[m]}</button>
 ${m=='login'?'<button class="b g" data-a="mode" data-id="register">Noch kein Konto? Registrieren</button><button class="b g" data-a="mode" data-id="reset">Passwort vergessen?</button>':m=='newpw'?'':'<button class="b g" data-a="mode" data-id="login">Zurück zur Anmeldung</button>'}</div></div>`};
-const A={th(el){S.set.theme=el.dataset.id;apply();saveSet();render()},out(){sb.auth.signOut()},adminOpen(){S.adminOpen=true;render()},adminClose(){S.adminOpen=false;render()},async adminSave(){const cfg={apps:{},announcement:{enabled:!!$('#ann_on')?.checked,text:$('#ann_text')?.value||''},maintenance:{enabled:!!$('#maint_on')?.checked,message:$('#maint_text')?.value||''}};for(const a of APPS)cfg.apps[a[0]]={visible:!!$('#vis_'+a[0])?.checked,url:$('#url_'+a[0])?.value.trim()||''};const{data,error}=await sb.rpc('mydigital_admin_save_config',{p_config:cfg});if(error){alert('Speichern fehlgeschlagen: '+error.message);return}S.dash=data||cfg;alert('Admin-Einstellungen gespeichert.');render()},mode(el){S.mode=el.dataset.id;S.err='';S.info='';render()},
+const A={th(el){S.set.theme=el.dataset.id;apply();saveSet();render()},out(){sb.auth.signOut()},adminOpen(){S.adminOpen=true;render()},adminClose(){S.adminOpen=false;render()},async adminSave(){const cfg={apps:{},announcement:{enabled:!!$('#ann_on')?.checked,text:$('#ann_text')?.value||''},maintenance:{enabled:!!$('#maint_on')?.checked,message:$('#maint_text')?.value||''}};for(const a of APPS)cfg.apps[a[0]]={visible:!!$('#vis_'+a[0])?.checked,url:$('#url_'+a[0])?.value.trim()||''};const{data,error}=await sb.rpc('mydigital_admin_save_config',{p_config:cfg});if(error){alert('Speichern fehlgeschlagen: '+error.message);return}S.dash=data||cfg;alert('Admin-Einstellungen gespeichert.');render()},
+async roleFind(){const n=$('#role_username')?.value.trim();if(!n)return alert('Bitte einen Benutzernamen eingeben.');const{data,error}=await sb.rpc('mydigital_admin_find_user',{p_username:n});if(error){S.roleUser=null;$('#role_result').style.display='block';$('#role_result').textContent=error.message;$('#role_controls').style.display='none';return}S.roleUser=data;$('#role_result').style.display='block';$('#role_result').textContent='Gefunden: '+data.username;$('#role_controls').style.display='flex';$('#role_premium').checked=!!data.premium;$('#role_admin').checked=!!data.admin},
+async roleSave(){if(!S.roleUser)return;const{data,error}=await sb.rpc('mydigital_admin_set_user_roles',{p_username:S.roleUser.username,p_premium:!!$('#role_premium')?.checked,p_admin:!!$('#role_admin')?.checked});if(error)return alert('Rechte konnten nicht gespeichert werden: '+error.message);S.roleUser=data;alert('Rechte für '+data.username+' gespeichert.');$('#role_result').textContent='Gespeichert: '+data.username+' · '+(data.premium?'Premium':'Standard')+' · '+(data.admin?'Admin':'Kein Admin')},
+mode(el){S.mode=el.dataset.id;S.err='';S.info='';render()},
  async auth(){S.err='';S.info='';const m=S.mode,em=($('#em')||{}).value?.trim(),pw=($('#pw')||{}).value||'',un=(($('#un')||{}).value||'').trim().toLowerCase();
   try{
    if(m=='register'){if(!/^[a-z0-9_]{3,20}$/.test(un))throw'Benutzername: 3–20 Zeichen, nur a–z, 0–9 und _.';if(pw.length<8)throw'Das Passwort braucht mindestens 8 Zeichen.';
