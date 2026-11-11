@@ -108,7 +108,7 @@ const evrow=(e,k)=>`<div class="ev" style="--c:${col(e)}"><div class="t">${k?pk(
 const per=p=>{const t=key(new Date()),tot=df(p.start,p.end)+1,el=Math.min(tot,Math.max(0,df(p.start,t)+1)),left=tot-el,pc=Math.round(el/tot*100);
  return`<div class="pr"><div class="ph"><b>${esc(p.name)}</b><span class="sm m">${pc}%</span></div><div class="bar"><div style="width:${pc}%"></div></div><div class="sm m">${t<p.start?'startet in '+df(t,p.start)+' Tagen':left+(left==1?' Resttag':' Resttage')}</div></div>`};
 function appConfig(name){return S.dash.apps?.[name]||{visible:true,url:(APPS.find(a=>a[0]===name)||[])[2]||''}}
-function safeAppUrl(v){try{const u=new URL(String(v||''),location.href);return /^https?:$/.test(u.protocol)?u.href:''}catch{return''}}
+function safeAppUrl(v){if(!String(v||'').trim())return'';try{const u=new URL(String(v).trim(),location.href);return /^https?:$/.test(u.protocol)?u.href:''}catch{return''}}
 function adminPanel(){if(!S.admin||!S.adminOpen)return'';return `<section class="card adminbox"><div class="adminhead"><h2>Admin-Verwaltung</h2><span class="sp"></span><button class="b" data-a="adminClose">Schließen</button></div>
 <p class="m sm">Hier steuerst du, welche Apps im MyDigital-Dashboard angezeigt werden und welche bereits einen anklickbaren Link besitzen.</p>
 <h3>Apps verwalten</h3>
