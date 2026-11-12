@@ -96,6 +96,13 @@ function occ(e,k){if(k<e.date)return false;if(e.rep=='none')return k<=e.endDate;
  if(e.rep=='daily')return true;if(e.rep=='weekly')return df(e.date,k)%7==0;if(e.rep=='monthly')return d.getDate()==s.getDate();return d.getDate()==s.getDate()&&d.getMonth()==s.getMonth()}
 const LC={work:'#4f8cff',private:'#34c38f',family:'#f59e0b',important:'#ef4444',sport:'#a855f7',other:'#64748b'},col=e=>LC[e.label]||e.lc||'#64748b';
 const APPS=[['MyKalender','cal',CAL_URL],['MyTasks','check'],['MyNotes','note','https://kotzschfelix-sudo.github.io/MyNotes/'],['MyFocus','clock','https://kotzschfelix-sudo.github.io/MyFocus/'],['MyProjects','folder'],['MyHabits','repeat'],['MyDay','sun'],['MyLinks','link'],['MyPDF','file'],['MyConvert','sync'],['MyQR','grid'],['MyImage','image'],['MyBudget','euro'],['MyMeals','food'],['MyTravel','map'],['MyInventory','box'],['MyCycle','cycle'],['MyActivity','pulse'],['MyChat','chat'],['MyVault','lock'],['MySupport','help'],['MyStatus','wifi']];
+const APP_ICONS={
+ 'MyKalender':'https://kotzschfelix-sudo.github.io/Kalender/icons/icon.svg',
+ 'MyTasks':'https://kotzschfelix-sudo.github.io/MyTasks/icons/mytasks.svg',
+ 'MyNotes':'https://kotzschfelix-sudo.github.io/MyNotes/icons/mynotes.svg',
+ 'MyFocus':'https://kotzschfelix-sudo.github.io/MyFocus/icons/myfocus.svg',
+ 'MyChat':'https://kotzschfelix-sudo.github.io/MyChat/icons/mychat.svg'
+};
 const DEFAULT_DASH={apps:{},announcement:{enabled:false,text:''},maintenance:{enabled:false,message:''}};
 const S={user:null,prem:false,admin:false,adminOpen:false,roleUser:null,dash:DEFAULT_DASH,set:{},events:[],periods:[],msg:'Lade dein Dashboard …',mode:'login',err:'',info:''};
 const isD=()=>{const t=S.set.theme||'dark';return t=='auto'?matchMedia('(prefers-color-scheme: dark)').matches:t=='dark'};
@@ -146,7 +153,7 @@ function render(){const app=$('#app');
 <a class="dcard" href="${CAL_URL}"><img src="${IMG_K}" alt="MyKalender" style="max-width:110px;border-radius:20px"><small>MyKalender</small></a></div></div>
 <div>${S.dash.announcement?.enabled&&S.dash.announcement.text?'<div class="notice">'+esc(S.dash.announcement.text)+'</div>':''}${S.dash.maintenance?.enabled&&S.dash.maintenance.message?'<div class="notice">Wartung: '+esc(S.dash.maintenance.message)+'</div>':''}</div>
 <div class="sec"><h2>Meine Apps</h2><span class="sp"></span><input id="q" class="sr" placeholder="Apps durchsuchen" style="padding-left:16px"></div>
-<div class="apps">${APPS.filter(a=>appConfig(a[0]).visible!==false).map(a=>{const c=appConfig(a[0]),url=safeAppUrl(c.url),appImg=a[0]==="MyTasks"?"https://kotzschfelix-sudo.github.io/MyTasks/icons/mytasks.svg":IMG_K;return url?`<a class="tile live" data-n="${a[0].toLowerCase()}" href="${esc(url)}"><img src="${appImg}" alt="${a[0]}"><b>${a[0]}</b></a>`:`<div class="tile dis" data-n="${a[0].toLowerCase()}"><div class="ti">${ico(a[1],26)}</div><b>${a[0]}</b><small>bald verfügbar</small></div>`}).join('')}</div>${adminPanel()}</div>`}
+<div class="apps">${APPS.filter(a=>appConfig(a[0]).visible!==false).map(a=>{const c=appConfig(a[0]),url=safeAppUrl(c.url),appImg=APP_ICONS[a[0]]||IMG_K;return url?`<a class="tile live" data-n="${a[0].toLowerCase()}" href="${esc(url)}"><img src="${appImg}" alt="${a[0]}"><b>${a[0]}</b></a>`:`<div class="tile dis" data-n="${a[0].toLowerCase()}"><div class="ti">${ico(a[1],26)}</div><b>${a[0]}</b><small>bald verfügbar</small></div>`}).join('')}</div>${adminPanel()}</div>`}
 const saveSet=()=>sb.from('settings').upsert({owner:S.user.id,data:S.set});
 const authv=()=>{const m=S.mode;if(S.msg)return`<div class="aw"><div class="card au"><img class="alogo" src="${IMG_D}" alt="MyDigital"><p class="m">${S.msg}</p></div></div>`;
  const tt={login:'Melde dich an',register:'Neues Konto erstellen',reset:'Passwort zurücksetzen',newpw:'Neues Passwort festlegen'}[m];
